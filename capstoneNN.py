@@ -26,10 +26,12 @@ trainingTargets = np.array([[1, 0, 0],
                    [1, 0, 0],
                    [0, 0, 1]])
 
+
 net = tflearn.input_data(shape=[None, 10])
-net = tflearn.fully_connected(net, 6)
+net = tflearn.fully_connected(net, 32)
+
 net = tflearn.fully_connected(net, 3, activation='softmax')
-net = tflearn.regression(net)
+net = tflearn.regression(net, optimizer = "adam",  learning_rate = 0.007)
 
 # Define model
 model = tflearn.DNN(net)
