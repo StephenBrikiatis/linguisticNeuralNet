@@ -16,22 +16,22 @@ testWords = ['kid', 'sweetheart', 'infants', 'have', 'honey', 'structure', 'warn
              'baby out', 'dear', 'bodies', 'darling', 'minors', 'structural', 'babies',
              'kids', 'childhood', 'baby', 'childcare', 'infant', 'Child', 'Children',
              'children', 'child']
-trainingTargets = np.array([[1, 0, 0],
-                   [0, 1, 0],
-                   [0, 0, 1],
-                   [0, 1, 0],
-                   [1, 0, 0],
-                   [1, 0, 0],
-                   [1, 0, 0],
-                   [1, 0, 0],
-                   [0, 0, 1]])
+trainingTargets = np.array([[1, 0, 0, 0],
+                   [0, 1, 0, 0],
+                   [0, 0, 0, 1],
+                   [0, 1, 0, 0],
+                   [1, 0, 0, 0],
+                   [1, 0, 0, 0],
+                   [1, 0, 0, 0],
+                   [1, 0, 0, 0],
+                   [0, 0, 1, 0]])
 
 
 net = tflearn.input_data(shape=[None, 10])
-net = tflearn.fully_connected(net, 32)
+net = tflearn.fully_connected(net, 32,  weight_decay = 0.01)
 
-net = tflearn.fully_connected(net, 3, activation='softmax')
-net = tflearn.regression(net, optimizer = "adam",  learning_rate = 0.007)
+net = tflearn.fully_connected(net, 4, activation='softmax',  weight_decay= 0.01)
+net = tflearn.regression(net, optimizer = "adam",  learning_rate = 0.01)
 
 # Define model
 model = tflearn.DNN(net)

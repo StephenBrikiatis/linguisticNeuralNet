@@ -4,11 +4,11 @@ import tflearn
 from lxml import html
 import networkx as nx
 import pandas as pd
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import numpy as np
-import plotly.tools as plTools
-import plotly.plotly as py
-import plotly.graph_objs as go
+#import plotly.tools as plTools
+#import plotly.plotly as py
+#import plotly.graph_objs as go
 
 #generates a dictionary of target words and weights
 #adds it to linkDict with the key being sourceWord
@@ -175,8 +175,13 @@ def generateWordData():
 
 
 #plTools.set_credentials_file(username='JackHouk', api_key='dEl1WMGPvkeClnayYxJz')
-np.save('training_honey', generateWordData())
-np.save('test_wood', generateWordData())
+#np.save('training_honey', generateWordData())
+#np.save('test_wood', generateWordData())
+
+arrayOfWords = generateWordData()
+
+print(arrayOfWords)
+
 #Visualizations for demo here
 '''
 #sum weights so the edge weights can be normalized
