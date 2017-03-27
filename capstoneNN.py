@@ -11,11 +11,10 @@ import numpy as np
 
 trainDat = np.load('training_honey.npy')
 testDat = np.load('test_wood.npy')
-testWords = ['kid', 'sweetheart', 'infants', 'have', 'honey', 'structure', 'warning',
-             'facilities', 'guard', 'careful', 'care', 'warn', 'Kids', 'Babies',
-             'baby out', 'dear', 'bodies', 'darling', 'minors', 'structural', 'babies',
-             'kids', 'childhood', 'baby', 'childcare', 'infant', 'Child', 'Children',
-             'children', 'child']
+testWords = ['child', 'children', 'infant', 'baby', 'childcare', 'childhood', 'kids',
+       'warn', 'facilities', 'bodies', 'dear', 'have', 'structure',
+       'sweetheart', 'careful', 'infants', 'minors', 'darling', 'warning',
+       'baby out', 'kid', 'honey', 'structural', 'babies', 'guard', 'care']
 trainingTargets = np.array([[1, 0, 0, 0],
                    [0, 1, 0, 0],
                    [0, 0, 0, 1],

@@ -65,18 +65,18 @@ def translationPairsToLattice(allWords, wordLinks, sourceIterations):
             for eachKey in wordLinks[eachWord]:
                 wordDicts[eachWord][eachKey] = wordLinks[eachWord][eachKey]
     #Starting from the bottom of the tree, connect every word to its translations
-    #then connect the word to its childrens translations, weighted by its connection to its children       
+    #then connect the word to its children's translations, weighted by its connection to its children
     for eachIter in sourceIterations:
         for eachWord in eachIter:
             sameLangTranslations(eachWord, wordLinks, wordDicts[eachWord])
             for everyWord in wordDicts[eachWord]:
-                weight = wordDicts[eachWord].get(everyWord, 0)
-                if not weight == 0 and everyWord in wordDicts:
-                    #checks that key exists, and skips if not
-                    for eachConnection in wordDicts[everyWord]:
-                        #checks that key exists, and skips if not
-                        if eachConnection in wordDicts[eachWord] and eachConnection in wordDicts[everyWord]:
-                            wordDicts[eachWord][eachConnection] += weight * wordDicts[everyWord][eachConnection]
+                if everyWord not in wordLinks[eachWord]:
+                    weight = wordDicts[eachWord].get(everyWord, 0)
+                    if not weight == 0 and everyWord in wordDicts and eachWord != everyWord:
+                        for eachConnection in wordDicts[everyWord]:
+                            #checks that key exists, and skips if not
+                            if eachConnection in wordDicts[eachWord] and eachConnection in wordDicts[everyWord]:
+                                wordDicts[eachWord][eachConnection] += weight * wordDicts[everyWord][eachConnection]
     return wordDicts
 
 def constructMasterWordList(sourceIterations, targetIterations):
@@ -84,13 +84,13 @@ def constructMasterWordList(sourceIterations, targetIterations):
     allWords = []
     for wordIter in reversed(sourceIterations):
         for word in wordIter:
-            allWords.append(word)
+            if word not in allWords:
+                allWords.append(word)
             
     for wordIter in reversed(targetIterations):
         for word in wordIter:
-            allWords.append(word)
-    #remove any duplicates from allWords
-    allWords = list(set(allWords))
+            if word not in allWords:
+                allWords.append(word)
     return allWords
 
 def genDataframe(sourceIterations, wordDicts, allWords):
@@ -122,16 +122,13 @@ def PCA(wordData, numCols):
     preparedData = wordData.dot(transformation)
     return preparedData
                 
-def generateWordData():
+def generateWordData(sourceWord, sLangLayers):
     lang = 'eng'
     #dictionary of dictionaries, connects words to their translations and lists weights
     wordLinks = {}
     #lists holding what words were added at each iteration, grouped by language
     sourceIterations = []
     targetIterations = []
-    #get source word from user
-    sourceWord = input('Source word: ')
-    sLangLayers = int(input('Number of source language layers: '))
     #number of iterations needed to generage desired depth, minus 1 because the initial word is a layer
     #layers is then doubled because for each layer created in source lang. a target lang layer must also be created
     iterations = ( sLangLayers - 1 ) * 2
@@ -166,7 +163,7 @@ def generateWordData():
                     candidateSources.append(word)
             nextSources = []
         nextSources = candidateSources
-        print(iterations - iterLimit)
+        print('\n.')
     #record the last set of targets after the mirroring finishes
     targetIterations.insert(0, nextSources)
     allWords = constructMasterWordList(targetIterations, sourceIterations)
@@ -189,17 +186,19 @@ def generateWordData():
     wordData = genDataframe(sourceIterations, wordDicts, allWords)
     finalCols = 10
     preparedData = PCA(wordData, finalCols)
-    print(len(allWords))
     return preparedData
 
 
 #plTools.set_credentials_file(username='JackHouk', api_key='dEl1WMGPvkeClnayYxJz')
-#np.save('training_honey', generateWordData())
-#np.save('test_wood', generateWordData())
-
-arrayOfWords = generateWordData()
-
-print(arrayOfWords)
+def main():
+    #get source word from user
+    sourceWord = input('Source word: ')
+    sLangLayers = int(input('Number of source language layers: '))
+    arrayOfWords = generateWordData(sourceWord, sLangLayers)
+    print(arrayOfWords.shape)
+    #np.save('training_honey', generateWordData())
+    #np.save('test_wood', generateWordData())
+#print(arrayOfWords)
 
 #Visualizations for demo here
 '''
@@ -223,3 +222,5 @@ plt.axis('off')
 plt.savefig("test.png") 
 plt.show()
 '''
+if __name__ == '__main__':
+    main()
