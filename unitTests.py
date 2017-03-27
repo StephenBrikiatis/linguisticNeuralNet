@@ -44,10 +44,11 @@ class testScraper( unittest.TestCase ):
         expResult = ['A', 'B', 'C', 'X', 'Y', 'Z', 'V', 'W']
         result = constructMasterWordList(list1, list2)
         self.assertEqual(result, expResult)
-    def test_genDataframe( self ):
-        self.fail('NYI')
-    def test_PCA( self ):
-        self.fail('NYI')
+        
+    def test_wholeScraper( self ):
+        expResult = (13, 10)
+        result = generateWordData('boat', 2).shape
+        self.assertEqual(result, expResult)
         
 if __name__ == '__main__':
     unittest.main()

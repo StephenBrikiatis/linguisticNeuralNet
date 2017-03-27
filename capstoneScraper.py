@@ -122,16 +122,13 @@ def PCA(wordData, numCols):
     preparedData = wordData.dot(transformation)
     return preparedData
                 
-def generateWordData():
+def generateWordData(sourceWord, sLangLayers):
     lang = 'eng'
     #dictionary of dictionaries, connects words to their translations and lists weights
     wordLinks = {}
     #lists holding what words were added at each iteration, grouped by language
     sourceIterations = []
     targetIterations = []
-    #get source word from user
-    sourceWord = input('Source word: ')
-    sLangLayers = int(input('Number of source language layers: '))
     #number of iterations needed to generage desired depth, minus 1 because the initial word is a layer
     #layers is then doubled because for each layer created in source lang. a target lang layer must also be created
     iterations = ( sLangLayers - 1 ) * 2
@@ -166,7 +163,7 @@ def generateWordData():
                     candidateSources.append(word)
             nextSources = []
         nextSources = candidateSources
-        print(iterations - iterLimit)
+        print('\n.')
     #record the last set of targets after the mirroring finishes
     targetIterations.insert(0, nextSources)
     allWords = constructMasterWordList(targetIterations, sourceIterations)
@@ -189,16 +186,18 @@ def generateWordData():
     wordData = genDataframe(sourceIterations, wordDicts, allWords)
     finalCols = 10
     preparedData = PCA(wordData, finalCols)
-    print(len(allWords))
-    print(allWords)
     return preparedData
 
 
 #plTools.set_credentials_file(username='JackHouk', api_key='dEl1WMGPvkeClnayYxJz')
-#np.save('training_honey', generateWordData())
-#np.save('test_wood', generateWordData())
 def main():
-    arrayOfWords = generateWordData()
+    #get source word from user
+    sourceWord = input('Source word: ')
+    sLangLayers = int(input('Number of source language layers: '))
+    arrayOfWords = generateWordData(sourceWord, sLangLayers)
+    print(arrayOfWords.shape)
+    #np.save('training_honey', generateWordData())
+    #np.save('test_wood', generateWordData())
 #print(arrayOfWords)
 
 #Visualizations for demo here
