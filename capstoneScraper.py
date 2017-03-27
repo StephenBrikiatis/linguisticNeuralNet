@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 import requests
-import tflearn
 from lxml import html
-import networkx as nx
+import numpy as np
 import pandas as pd
 #import matplotlib.pyplot as plt
-import numpy as np
 #import plotly.tools as plTools
 #import plotly.plotly as py
 #import plotly.graph_objs as go
@@ -32,7 +30,17 @@ def genTargetDict(sourceWord, linkDict, lang):
     rawFreq = tree.xpath('//td[@class="freq"]/a/text()')
     words = tree.xpath('//td[@class="trg"]/a/text()')
     intFreq = [int(str(i)) for i in list(rawFreq)]
-    normFreq = [float(i)/sum(intFreq) for i in list(intFreq)]
+    candidateDict = {}
+    for i in range(0, len(words)):
+        if words[i] not in list(candidateDict.keys()):
+            candidateDict[str(words[i]).lower()] = 0
+        else:
+            candidateDict[str(words[i]).lower()] += intFreq[i]
+    lowerWords = []
+    for word in words:
+        lowerWords.append(word.lower())
+    words = set(lowerWords)
+    normFreq = [float(i)/sum(intFreq) for i in list(candidateDict.values())]
     linkDict[sourceWord] = dict(zip(words, normFreq))
     #remove all words that already exist in the graph
     for word in linkDict.keys():
@@ -45,65 +53,7 @@ def sameLangTranslations(sourceWord, lattice, wordDict):
             for synonym in lattice[mirroredWord]:
                 wordDict[synonym] += weight * lattice[mirroredWord][synonym]
                 
-def generateWordData():
-    lang = 'eng'
-    #dictionary of dictionaries, connects words to their translations and lists weights
-    wordLinks = {}
-    #lists holding what words were added at each iteration, grouped by language
-    sourceIterations = []
-    targetIterations = []
-    #get source word from user
-    sourceWord = input('Source word: ')
-    sLangLayers = int(input('Number of source language layers: '))
-    #number of iterations needed to generage desired depth, minus 1 because the initial word is a layer
-    #layers is then doubled because for each layer created in source lang. a target lang layer must also be created
-    iterations = ( sLangLayers - 1 ) * 2
-    #Add the list of iteration 0 words to the source list
-    sourceIterations.append([sourceWord])
-    #generate the first set of translations
-    genTargetDict(sourceWord, wordLinks, lang)
-    #Mirror for the first time (target treated as source, source treated as target)
-    nextSources = list(list(wordLinks.values())[0].keys())
-    #limit iterations of mirroring to the user defined value
-    for iterLimit in range(0,iterations):
-        #toggle language selection with each iteration, lang is the current source language
-        if lang == 'eng':
-            #if the last source was english, the nextSources will be french
-            targetIterations.insert(0, list(set(nextSources)))
-            lang = 'fre'
-        else:
-            #if the last source was not english, the nextSources will be english
-            sourceIterations.insert(0, list(set(nextSources)))
-            lang = 'eng'
-        while nextSources:
-            #no candidate sources yet for this iteration
-            candidateSources = []
-            #for each source, find all translations
-            #add all translations to candidateSources
-            for source in nextSources:
-                src = str(source)
-                genTargetDict(src, wordLinks, lang)
-                #add all keys(translations) to the candidate list
-                for word in list(wordLinks[src]):
-                    candidateSources.append(word)
-            nextSources = []
-        nextSources = candidateSources
-        print(iterations - iterLimit)
-    
-    #record the last set of targets after the mirroring finishes
-    targetIterations.insert(0, nextSources)
-    #Create a master list of all words in the order that they will have in the tensorFlow input
-    allWords = []
-    for wordIter in reversed(sourceIterations):
-        for word in wordIter:
-            allWords.append(word)
-            
-    for wordIter in reversed(targetIterations):
-        for word in wordIter:
-            allWords.append(word)
-    #remove any duplicates from allWords
-    allWords = list(set(allWords))
-    #Build dictionaries for each word that extend past initial translations
+def translationPairsToLattice(allWords, wordLinks, sourceIterations):
     wordDicts = {}
     for eachWord in allWords:
         wordDicts[eachWord] = {}
@@ -127,24 +77,23 @@ def generateWordData():
                         #checks that key exists, and skips if not
                         if eachConnection in wordDicts[eachWord] and eachConnection in wordDicts[everyWord]:
                             wordDicts[eachWord][eachConnection] += weight * wordDicts[everyWord][eachConnection]
-        
-    #Make all the connections bi-directional (each child connects back to its parent)
-    for parent in wordDicts:
-        for child in wordDicts[parent]:
-            #skip if the child has no entry
-            if child in wordDicts:
-                wordDicts[child][parent] = wordDicts[parent][child]
-                
-    #normalize the dataset
-    for eachDict in wordDicts.values():
-        for eachWord in eachDict:
-            if not sum(list(eachDict.values())) == 0:
-                eachDict[eachWord] = eachDict[eachWord]/sum(list(eachDict.values()))
-    
-    #make all words connect to themselves
-    for eachWord in wordDicts:
-        wordDicts[eachWord][eachWord] = 1
-        
+    return wordDicts
+
+def constructMasterWordList(sourceIterations, targetIterations):
+    #Create a master list of all words in the order that they will have in the tensorFlow input
+    allWords = []
+    for wordIter in reversed(sourceIterations):
+        for word in wordIter:
+            allWords.append(word)
+            
+    for wordIter in reversed(targetIterations):
+        for word in wordIter:
+            allWords.append(word)
+    #remove any duplicates from allWords
+    allWords = list(set(allWords))
+    return allWords
+
+def genDataframe(sourceIterations, wordDicts, allWords):
     #convert dictionaries into a single data table
     dataTable = []
     rowNames = []
@@ -156,6 +105,9 @@ def generateWordData():
     wordData = pd.DataFrame(dataTable)
     wordData.columns = allWords
     wordData.index = rowNames
+    return wordData
+
+def PCA(wordData, numCols):
     #reduce the dimensionality of the dataset to n x 30
     #this is to ensure consistent column meanings for the neural net
     #Credit to Sebastian Raschka's plotly tutorial for significant contributions to the PCA code section
@@ -168,8 +120,75 @@ def generateWordData():
     transformation = np.array([i[1] for i in eigenPairs[0:10]])
     transformation = np.transpose(transformation)
     preparedData = wordData.dot(transformation)
-    for iter8 in sourceIterations:
-        print(iter8)
+    return preparedData
+                
+def generateWordData():
+    lang = 'eng'
+    #dictionary of dictionaries, connects words to their translations and lists weights
+    wordLinks = {}
+    #lists holding what words were added at each iteration, grouped by language
+    sourceIterations = []
+    targetIterations = []
+    #get source word from user
+    sourceWord = input('Source word: ')
+    sLangLayers = int(input('Number of source language layers: '))
+    #number of iterations needed to generage desired depth, minus 1 because the initial word is a layer
+    #layers is then doubled because for each layer created in source lang. a target lang layer must also be created
+    iterations = ( sLangLayers - 1 ) * 2
+    #Add the list of iteration 0 words to the source list
+    sourceIterations.append([sourceWord.lower()])
+    #generate the first set of translations
+    genTargetDict(sourceWord, wordLinks, lang)
+    #Mirror for the first time (target treated as source, source treated as target)
+    nextSources = list(list(wordLinks.values())[0].keys())
+    #limit iterations of mirroring to the user defined value
+    for iterLimit in range(0,iterations):
+        #toggle language selection with each iteration, lang is the current source language
+        if lang == 'eng':
+            #if the last source was english, the nextSources will be french
+            targetIterations.insert(0, list(set(nextSources)))
+            lang = 'fre'
+        else:
+            #if the last source was not english, the nextSources will be english
+            sourceIterations.insert(0, list(set(nextSources)))
+            lang = 'eng'
+            
+        while nextSources:
+            #no candidate sources yet for this iteration
+            candidateSources = []
+            #for each source, find all translations
+            #add all translations to candidateSources
+            for source in nextSources:
+                src = str(source)
+                genTargetDict(src, wordLinks, lang)
+                #add all keys(translations) to the candidate list
+                for word in list(wordLinks[src]):
+                    candidateSources.append(word)
+            nextSources = []
+        nextSources = candidateSources
+        print(iterations - iterLimit)
+    #record the last set of targets after the mirroring finishes
+    targetIterations.insert(0, nextSources)
+    allWords = constructMasterWordList(targetIterations, sourceIterations)
+    #Build dictionaries for each word that extend past initial translations
+    wordDicts = translationPairsToLattice(allWords, wordLinks, sourceIterations)
+    #Make all the connections bi-directional (each child connects back to its parent)
+    for parent in wordDicts:
+        for child in wordDicts[parent]:
+            #skip if the child has no entry
+            if child in wordDicts:
+                wordDicts[child][parent] = wordDicts[parent][child]  
+    #normalize the dataset
+    for eachDict in wordDicts.values():
+        for eachWord in eachDict:
+            if not sum(list(eachDict.values())) == 0:
+                eachDict[eachWord] = eachDict[eachWord]/sum(list(eachDict.values()))
+    #make all words connect to themselves
+    for eachWord in wordDicts:
+        wordDicts[eachWord][eachWord] = 1
+    wordData = genDataframe(sourceIterations, wordDicts, allWords)
+    finalCols = 10
+    preparedData = PCA(wordData, finalCols)
     print(len(allWords))
     return preparedData
 
