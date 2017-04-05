@@ -7,6 +7,7 @@ Created on Tue Mar 21 06:55:56 2017
 
 import tflearn
 import numpy as np
+import json
 #Currently configure to handle the word child (2 layers) as the test training data
 
 trainDat = np.load('training_honey.npy')
@@ -38,14 +39,20 @@ model = tflearn.DNN(net)
 model.fit(trainDat, trainingTargets, n_epoch=800, batch_size=5, show_metric=True)
 
 pred = model.predict(testDat)
-groups = [[],[],[],[]]
+groups = [] #[[],[],[],[]]
 for i in range(0, len(pred)):
     grouped = False
     for j in range(0, 3):
         if pred[i][j] > .65:
             grouped = True
-            groups[j].append(testWords[i])
+            temp = [j,  testWords[i]]
+            groups.append(temp)
         if j == 2 and not grouped:
-            groups[3].append(testWords[i])
+            temp = [3,  testWords[i]]
+            groups.append(temp)
             
+groups.sort()
 print(groups)
+
+with open("netOutput.json",  "w") as output:
+    json.dump(groups,  output)
