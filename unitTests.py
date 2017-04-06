@@ -2,7 +2,7 @@
 """
 Created on Mon Mar 27 15:35:00 2017
 
-@author: john
+@author: john houk
 """
 
 from capstoneScraper import *
