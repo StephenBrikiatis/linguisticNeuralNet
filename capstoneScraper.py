@@ -3,6 +3,7 @@ import requests
 from lxml import html
 import numpy as np
 import pandas as pd
+import json
 #import matplotlib.pyplot as plt
 #import plotly.tools as plTools
 #import plotly.plotly as py
@@ -120,6 +121,7 @@ def PCA(wordData, numCols):
     transformation = np.array([i[1] for i in eigenPairs[0:10]])
     transformation = np.transpose(transformation)
     preparedData = wordData.dot(transformation)
+    print(preparedData)
     return preparedData
                 
 def generateWordData(sourceWord, sLangLayers):
@@ -184,8 +186,13 @@ def generateWordData(sourceWord, sLangLayers):
     for eachWord in wordDicts:
         wordDicts[eachWord][eachWord] = 1
     wordData = genDataframe(sourceIterations, wordDicts, allWords)
+    print(wordData)
     finalCols = 10
     preparedData = PCA(wordData, finalCols)
+    #with open('scrapeDict.csv',  'wb') as csv_file:
+    #    writer = csv.DictWriter(csv_file, preparedData.keys())
+    #    writer.writeheader()
+    #    writer.writerow(preparedData)
     return preparedData
 
 
@@ -193,6 +200,9 @@ def generateWordData(sourceWord, sLangLayers):
 def main():
     #get source word from user
     sourceWord = input('Source word: ')
+    jsonItem = [sourceWord]
+    with open("visualization/scraperOutput.json",  "w") as output:
+        json.dump(jsonItem,  output)
     sLangLayers = int(input('Number of source language layers: '))
     arrayOfWords = generateWordData(sourceWord, sLangLayers)
     print(arrayOfWords.shape)

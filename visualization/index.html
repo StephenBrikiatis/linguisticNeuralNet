@@ -18,7 +18,6 @@
         <script type="text/javascript">
        var x = 0; 
         
-        d3.json("netOutput.json", function(d) {
         var itemHeight = 1000;
         var itemWidth = 1900;
         
@@ -27,6 +26,35 @@
         .attr("width", itemWidth)
         .attr("height", itemHeight);
         
+       d3.json("scraperOutput.json", function first(f) {
+        svg.selectAll("circle")
+        .data(f)
+        .enter()
+        .append("circle")
+        .attr("cx", function(f) {
+            var mid = itemWidth/2;
+            return mid;
+        })
+        .attr("cy", 300)
+        .attr("r", 20)
+        .attr("fill", "blue")
+        
+        svg.selectAll("text")
+        .data(f)
+        .enter()
+        .append("text")
+        .text(f)
+        .attr("x", function(f) {
+            var mid = itemWidth/2 +10;
+            return mid;
+        })
+        .attr("y", 300)
+         .attr("font-family",  "sans-serif")
+        .attr("font-size", "12px")
+        .attr("fill",  "orange")
+        });
+        
+        d3.json("netOutput.json", function second(d) {
         svg.selectAll("circle")
         .data(d)
         .enter()
@@ -36,11 +64,11 @@
            return x;
         })
         .attr("cy", function(d) {
-            return 500;
+            return itemHeight / 2;
         })
         .attr("r", 15)
         .attr("fill", function(d) {
-        return "rgb(255, "+ d[0] * 100 +", 0)";
+        return "rgb(255, "+ d[0] * 75 +", 0)";
        });
         
         x = 0;
@@ -55,14 +83,13 @@
            x = x + 60;
            return x;
         })
-        .attr("y", 500)
+        .attr("y", function(d) {
+            return itemHeight / 2;
+        })
         .attr("font-family",  "sans-serif")
         .attr("font-size", "10px")
-        .attr("fill",  "blue");
+        .attr("fill",  "blue")
         });
-        
-        //var dataset = [[5, 20], [10, 12], [15, 14], [20, 5], [17, 2], [13, 19],  [22, 30], [27, 3],
-        //[32, 14], [35, 12], [31, 2], [129, 20]]
         
         </script>
         

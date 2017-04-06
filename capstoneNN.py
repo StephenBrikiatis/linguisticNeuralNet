@@ -16,22 +16,22 @@ testWords = ['child', 'children', 'infant', 'baby', 'childcare', 'childhood', 'k
        'warn', 'facilities', 'bodies', 'dear', 'have', 'structure',
        'sweetheart', 'careful', 'infants', 'minors', 'darling', 'warning',
        'baby out', 'kid', 'honey', 'structural', 'babies', 'guard', 'care']
-trainingTargets = np.array([[1, 0, 0, 0],
-                   [0, 1, 0, 0],
-                   [0, 0, 0, 1],
-                   [0, 1, 0, 0],
-                   [1, 0, 0, 0],
-                   [1, 0, 0, 0],
-                   [1, 0, 0, 0],
-                   [1, 0, 0, 0],
-                   [0, 0, 1, 0]])
+trainingTargets = np.array([[1, 0, 0],
+                   [0, 1, 0],
+                   [0, 0, 1],
+                   [0, 1, 0],
+                   [1, 0, 0],
+                   [1, 0, 0],
+                   [1, 0, 0],
+                   [1, 0, 0],
+                   [0, 0, 1]])
 
 
 net = tflearn.input_data(shape=[None, 10])
-net = tflearn.fully_connected(net, 32,  weight_decay = 0.01)
+net = tflearn.fully_connected(net, 8,  weight_decay = 0.01)
 
-net = tflearn.fully_connected(net, 4, activation='softmax',  weight_decay= 0.01)
-net = tflearn.regression(net, optimizer = "adam",  learning_rate = 0.01)
+net = tflearn.fully_connected(net, 3, activation='softmax',  weight_decay= 0.1)
+net = tflearn.regression(net, optimizer = "adam",  learning_rate = 0.1)
 
 # Define model
 model = tflearn.DNN(net)
@@ -54,5 +54,5 @@ for i in range(0, len(pred)):
 groups.sort()
 print(groups)
 
-with open("netOutput.json",  "w") as output:
+with open("visualization/netOutput.json",  "w") as output:
     json.dump(groups,  output)
