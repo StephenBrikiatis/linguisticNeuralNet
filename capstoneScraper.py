@@ -31,18 +31,18 @@ def genTargetDict(sourceWord, linkDict, lang):
     rawFreq = tree.xpath('//td[@class="freq"]/a/text()')
     words = tree.xpath('//td[@class="trg"]/a/text()')
     intFreq = [int(str(i)) for i in list(rawFreq)]
-    candidateDict = {}
-    for i in range(0, len(words)):
-        if words[i] not in list(candidateDict.keys()):
-            candidateDict[str(words[i]).lower()] = 0
-        else:
-            candidateDict[str(words[i]).lower()] += intFreq[i]
-    lowerWords = []
-    for word in words:
-        lowerWords.append(word.lower())
-    words = set(lowerWords)
-    normFreq = [float(i)/sum(intFreq) for i in list(candidateDict.values())]
-    linkDict[sourceWord] = dict(zip(words, normFreq))
+#    candidateDict = {}
+#    for i in range(0, len(words)):
+#        if words[i] not in list(candidateDict.keys()):
+#            candidateDict[str(words[i]).lower()] = 0
+#        else:
+#            candidateDict[str(words[i]).lower()] += intFreq[i]
+#    lowerWords = []
+#    for word in words:
+#        lowerWords.append(word.lower())
+#    words = set(lowerWords)
+#    normFreq = [float(i)/sum(intFreq) for i in list(candidateDict.values())]
+    linkDict[sourceWord] = dict(zip(words, intFreq))
     #remove all words that already exist in the graph
     for word in linkDict.keys():
         linkDict[sourceWord].pop(word, None)
@@ -121,7 +121,6 @@ def PCA(wordData, numCols):
     transformation = np.array([i[1] for i in eigenPairs[0:10]])
     transformation = np.transpose(transformation)
     preparedData = wordData.dot(transformation)
-    print(preparedData)
     return preparedData
                 
 def generateWordData(sourceWord, sLangLayers):
@@ -165,7 +164,6 @@ def generateWordData(sourceWord, sLangLayers):
                     candidateSources.append(word)
             nextSources = []
         nextSources = candidateSources
-        print('\n.')
     #record the last set of targets after the mirroring finishes
     targetIterations.insert(0, nextSources)
     allWords = constructMasterWordList(targetIterations, sourceIterations)
@@ -186,7 +184,7 @@ def generateWordData(sourceWord, sLangLayers):
     for eachWord in wordDicts:
         wordDicts[eachWord][eachWord] = 1
     wordData = genDataframe(sourceIterations, wordDicts, allWords)
-    print(wordData)
+    #print(wordDicts['honey'])
     finalCols = 10
     preparedData = PCA(wordData, finalCols)
     #with open('scrapeDict.csv',  'wb') as csv_file:
