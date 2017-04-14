@@ -1,3 +1,9 @@
 test.png
 *.pyc
+*.csv
+*.npy
+manual*
 HoukTestNotes.rtf
+*.rtf
+honey_values
+honey_labeled
