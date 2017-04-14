@@ -128,7 +128,7 @@ def PCA(wordData, numCols, sourceWord):
     totalVariance = sum(eigenVals)
     varianceExplained = [(i / totalVariance)*100 for i in sorted(eigenVals, reverse=True)]
     cumulativeVarianceExplained = np.cumsum(varianceExplained)
-    pd.DataFrame([varianceExplained, cumulativeVarianceExplained.tolist()])#.to_csv(sourceWord + 'PCA_dat.csv')
+    pd.DataFrame([varianceExplained, cumulativeVarianceExplained.tolist()]).to_csv(sourceWord + 'PCA_dat.csv')
     return preparedData
                 
 def generateWordData(sourceWord, sLangLayers):
@@ -149,6 +149,7 @@ def generateWordData(sourceWord, sLangLayers):
     nextSources = list(list(wordLinks.values())[0].keys())
     #limit iterations of mirroring to the user defined value
     for iterLimit in range(0,iterations):
+        print('.')
         #toggle language selection with each iteration, lang is the current source language
         if lang == 'eng':
             #if the last source was english, the nextSources will be french
@@ -197,7 +198,7 @@ def generateWordData(sourceWord, sLangLayers):
         
     wordData = genDataframe(sourceIterations, wordDicts, allWords)
     #print(wordDicts['honey'])
-    finalCols = 10
+    finalCols = 16
     preparedData = PCA(wordData, finalCols, sourceWord)
     #with open('scrapeDict.csv',  'wb') as csv_file:
     #    writer = csv.DictWriter(csv_file, preparedData.keys())
@@ -208,14 +209,19 @@ def generateWordData(sourceWord, sLangLayers):
 
 #plTools.set_credentials_file(username='JackHouk', api_key='dEl1WMGPvkeClnayYxJz')
 def main():
-    #get source word from user
-    sourceWord = input('Source word: ')
-    jsonItem = [sourceWord]
-    with open("visualization/scraperOutput.json",  "w") as output:
-        json.dump(jsonItem,  output)
-    sLangLayers = int(input('Number of source language layers: '))
-    arrayOfWords = generateWordData(sourceWord, sLangLayers)
-    print(arrayOfWords.shape)
+    #List of words used to train the neural net.
+    sourceWords = ["honey", "child", "sweet", "dear", "baby", "run", "operate", "guide", "flee", "calculate",
+                   "big", "important", "meaningful", "exciting", "major", "joy", "happiness", "smile", "fun", "cool",
+                   "hot", "cold", "young", "old", "fish", 
+                   "spy", "clean", "destroy", "hide", "show"]
+    for sourceWord in sourceWords:    
+        jsonItem = [sourceWord]
+        print(sourceWord)
+        with open("visualization/scraperOutput.json",  "w") as output:
+            json.dump(jsonItem,  output)
+        sLangLayers = 2
+        arrayOfWords = generateWordData(sourceWord, sLangLayers)
+        arrayOfWords.to_csv(sourceWord + "_values.csv")
     #np.save('training_honey', generateWordData())
     #np.save('test_wood', generateWordData())
 
