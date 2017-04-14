@@ -31,18 +31,19 @@ def genTargetDict(sourceWord, linkDict, lang):
     rawFreq = tree.xpath('//td[@class="freq"]/a/text()')
     words = tree.xpath('//td[@class="trg"]/a/text()')
     intFreq = [int(str(i)) for i in list(rawFreq)]
-#    candidateDict = {}
-#    for i in range(0, len(words)):
-#        if words[i] not in list(candidateDict.keys()):
-#            candidateDict[str(words[i]).lower()] = 0
-#        else:
-#            candidateDict[str(words[i]).lower()] += intFreq[i]
-#    lowerWords = []
-#    for word in words:
-#        lowerWords.append(word.lower())
-#    words = set(lowerWords)
-#    normFreq = [float(i)/sum(intFreq) for i in list(candidateDict.values())]
-    linkDict[sourceWord] = dict(zip(words, intFreq))
+    candidateDict = {}
+    for i in range(0, len(words)):
+        if words[i] not in list(candidateDict.keys()):
+            candidateDict[str(words[i]).lower()] = 0
+        candidateDict[str(words[i]).lower()] += intFreq[i]
+    lowerWords = []
+    for word in words:
+        lowerWords.append(word.lower())
+    words = set(lowerWords)
+    normFreq = [0 for i in range(0, len(lowerWords))]
+    for i in range(0, len(lowerWords)):
+        normFreq[i] = candidateDict[lowerWords[i]]/sum(candidateDict.values())
+    linkDict[sourceWord] = dict(zip(words, normFreq))
     #remove all words that already exist in the graph
     for word in linkDict.keys():
         linkDict[sourceWord].pop(word, None)
@@ -80,14 +81,13 @@ def translationPairsToLattice(allWords, wordLinks, sourceIterations):
                                 wordDicts[eachWord][eachConnection] += weight * wordDicts[everyWord][eachConnection]
     return wordDicts
 
-def constructMasterWordList(sourceIterations, targetIterations):
+def constructMasterWordList(targetIterations, sourceIterations):
     #Create a master list of all words in the order that they will have in the tensorFlow input
     allWords = []
     for wordIter in reversed(sourceIterations):
         for word in wordIter:
             if word not in allWords:
                 allWords.append(word)
-            
     for wordIter in reversed(targetIterations):
         for word in wordIter:
             if word not in allWords:
@@ -102,9 +102,12 @@ def genDataframe(sourceIterations, wordDicts, allWords):
     for eachIter in reversed(sourceIterations):
         for eachWord in eachIter:
             rowNames.append(eachWord)
-            dataTable.append(list(wordDicts[eachWord].values()))
+            newRow = []
+            for everyWord in allWords:
+                newRow.append(wordDicts[eachWord][everyWord])
+            dataTable.append(newRow)
     wordData = pd.DataFrame(dataTable)
-    wordData.columns = allWords
+    wordData.columns = reversed(allWords)
     wordData.index = rowNames
     return wordData
 
@@ -125,7 +128,7 @@ def PCA(wordData, numCols, sourceWord):
     totalVariance = sum(eigenVals)
     varianceExplained = [(i / totalVariance)*100 for i in sorted(eigenVals, reverse=True)]
     cumulativeVarianceExplained = np.cumsum(varianceExplained)
-    pd.DataFrame([varianceExplained, cumulativeVarianceExplained]).to_csv(sourceWord + 'PCA_dat.csv')
+    pd.DataFrame([varianceExplained, cumulativeVarianceExplained.tolist()])#.to_csv(sourceWord + 'PCA_dat.csv')
     return preparedData
                 
 def generateWordData(sourceWord, sLangLayers):
@@ -175,11 +178,12 @@ def generateWordData(sourceWord, sLangLayers):
     #Build dictionaries for each word that extend past initial translations
     wordDicts = translationPairsToLattice(allWords, wordLinks, sourceIterations)
     #Make all the connections bi-directional (each child connects back to its parent)
-    for parent in wordDicts:
-        for child in wordDicts[parent]:
-            #skip if the child has no entry
-            if child in wordDicts:
-                wordDicts[child][parent] = wordDicts[parent][child] 
+    for words in reversed(sourceIterations):
+        for parent in words:
+            for child in wordDicts[parent]:
+                #skip if the child has no entry
+                if child in wordDicts:
+                    wordDicts[child][parent] = wordDicts[parent][child] 
     with open("latticeOutput.json",  "w") as output:
         json.dump(wordDicts,  output)
     #normalize the dataset
@@ -190,6 +194,7 @@ def generateWordData(sourceWord, sLangLayers):
     #make all words connect to themselves
     for eachWord in wordDicts:
         wordDicts[eachWord][eachWord] = 1
+        
     wordData = genDataframe(sourceIterations, wordDicts, allWords)
     #print(wordDicts['honey'])
     finalCols = 10
