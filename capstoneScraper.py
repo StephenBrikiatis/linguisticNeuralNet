@@ -108,7 +108,7 @@ def genDataframe(sourceIterations, wordDicts, allWords):
     wordData.index = rowNames
     return wordData
 
-def PCA(wordData, numCols):
+def PCA(wordData, numCols, sourceWord):
     #reduce the dimensionality of the dataset to n x 30
     #this is to ensure consistent column meanings for the neural net
     #Credit to Sebastian Raschka's plotly tutorial for significant contributions to the PCA code section
@@ -121,6 +121,11 @@ def PCA(wordData, numCols):
     transformation = np.array([i[1] for i in eigenPairs[0:10]])
     transformation = np.transpose(transformation)
     preparedData = wordData.dot(transformation)
+    #Save metrics on explained variance as a sorted list of pairs (explained variance of each vector, total explained)
+    totalVariance = sum(eigenVals)
+    varianceExplained = [(i / totalVariance)*100 for i in sorted(eigenVals, reverse=True)]
+    cumulativeVarianceExplained = np.cumsum(varianceExplained)
+    pd.DataFrame([varianceExplained, cumulativeVarianceExplained]).to_csv(sourceWord + 'PCA_dat.csv')
     return preparedData
                 
 def generateWordData(sourceWord, sLangLayers):
@@ -188,7 +193,7 @@ def generateWordData(sourceWord, sLangLayers):
     wordData = genDataframe(sourceIterations, wordDicts, allWords)
     #print(wordDicts['honey'])
     finalCols = 10
-    preparedData = PCA(wordData, finalCols)
+    preparedData = PCA(wordData, finalCols, sourceWord)
     #with open('scrapeDict.csv',  'wb') as csv_file:
     #    writer = csv.DictWriter(csv_file, preparedData.keys())
     #    writer.writeheader()
@@ -208,29 +213,6 @@ def main():
     print(arrayOfWords.shape)
     #np.save('training_honey', generateWordData())
     #np.save('test_wood', generateWordData())
-#print(arrayOfWords)
 
-#Visualizations for demo here
-'''
-#sum weights so the edge weights can be normalized
-totalWeight = 0
-for source in wordLinks.keys():
-    for target in wordLinks[source]:
-        totalWeight = totalWeight + int(wordLinks[source][target])
-#add edges and nodes to the graph
-for source in wordLinks.keys():
-    for target in wordLinks[source]:
-        visual.add_edge(source, target, weight=int(int(wordLinks[source][target])/totalWeight*100000)/100)
-        #visual.add_edge(source, target, weight=1000*int(wordLinks[source][target]))
-pos=nx.spring_layout(visual, scale = 360, k = 1, iterations = 8)
-nx.draw(visual,pos)
-labels = nx.get_edge_attributes(visual,'weight')
-nx.draw_networkx_nodes(visual,pos,node_size=1)
-#nx.draw_networkx_edge_labels(visual,pos,edge_labels=labels)
-nx.draw_networkx_labels(visual,pos,font_size=12,font_family='sans-serif')
-plt.axis('off')
-plt.savefig("test.png") 
-plt.show()
-'''
 if __name__ == '__main__':
     main()

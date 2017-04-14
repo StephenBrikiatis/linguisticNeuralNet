@@ -9,10 +9,10 @@ import tflearn
 import numpy as np
 import json
 #Currently configure to handle the word child (2 layers) as the test training data
-buckets = input("Number of categories: )
+buckets = input("Number of categories: ")
 categorizationThreshold = input("Categorization Threshold: ")
 oneCategoryOnly = 'z'
-while oneCategoryOnly.lower() not in ['y', 'n']
+while oneCategoryOnly.lower() not in ['y', 'n']:
     oneCategoryOnly = input("Only place words in one category [Y/N]: ")
 trainDat = np.load('training_honey.npy')
 testDat = np.load('test_wood.npy')
@@ -44,7 +44,7 @@ model.fit(trainDat, trainingTargets, n_epoch=800, batch_size=5, show_metric=True
 
 pred = model.predict(testDat)
 groups = [] #[[],[],[],[]]
-if oneCategoryOnly.lower() == 'y'
+if oneCategoryOnly.lower() == 'y':
     for i in range(0, len(pred)):
         grouped = 0
         for j in range(0, buckets):
