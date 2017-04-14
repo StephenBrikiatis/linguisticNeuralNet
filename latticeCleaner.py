@@ -65,3 +65,6 @@ while clean == 0:
         reset[1] = 0
       
 print(treeArray)
+
+with open("visualization/cleanerOutput.json",  "w") as output:
+    json.dump(treeArray,  output)
