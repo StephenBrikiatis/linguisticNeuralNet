@@ -13,19 +13,22 @@ for dict in lattice_raw:
        if lattice_raw[dict][item] != 0:
            fixedLattice[dict][item] = lattice_raw[dict][item]
 
+removalList = []
+
+for entries in fixedLattice:
+    removalList.append([entries, 0])
 
 treeArray = []
 #remove characters from the starting word to make it readable
 word = json_starting_word.replace("[",  "").replace("]",  "").replace('"',  "")
-print(word)
 
 #order of items in the treeArray: word, row, position in row, items it connects to or is connected to.
 treeArray = [[word,  0,  0]]
 
 #This for loop builds the tree by checking each item of the TreeArray in the current loop, and finding what they are connected to.
 rowSizes = []
+clean = 0
 for rows in range(0,  4):
-    print(rows)
     holder = []
     arrayLength = len(treeArray);
     itemNumber = 0;
@@ -36,21 +39,32 @@ for rows in range(0,  4):
                 itemNumber += 1
 #this halve of the for loop removes extras and copies of words that would create a feedback loop
     rowSizes.append(itemNumber)
-    print(rowSizes)
-    print(treeArray)
-    for identifierRow in range(0,  rows+1):
-        total = 1
-        for adder in rowSizes:
-            total += adder
-        subtotal = total - rowSizes[-1]
-        for identiferPositionX in range(0,  subtotal):
-            itemsToRemove = []
-            for identifierPositionY in range(0,  rowSizes[-1]):
-                identifierPositionY += subtotal
-                if(treeArray[identiferPositionX][0] == treeArray[identifierPositionY][0]):
-                    itemsToRemove.append(identifierPositionY)
-            for removalItem in reversed(itemsToRemove):
-                del treeArray[removalItem]
-                rowSizes[-1] -= 1
-                    
+    for items in range(0,  len(treeArray)):
+        for removalItem in removalList:
+            if(items < len(treeArray)):
+                if(treeArray[items][0] == removalItem[0]):
+                    if(removalItem[1] >= 1):
+                        del treeArray[items]
+                    else:
+                        removalItem[1] = 1
+    for reset in removalList:
+        reset[1] = 0
+#secondary check to remove any extra doubles
+while clean == 0:
+    clean = 1
+    for items in range(0,  len(treeArray)):
+        for removalItem in removalList:
+            if(items < len(treeArray)):
+                if(treeArray[items][0] == removalItem[0]):
+                    if(removalItem[1] >= 1):
+                        del treeArray[items]
+                        clean = 0
+                    else:
+                        removalItem[1] = 1
+    for reset in removalList:
+        reset[1] = 0
+      
 print(treeArray)
+
+with open("visualization/cleanerOutput.json",  "w") as output:
+    json.dump(treeArray,  output)
