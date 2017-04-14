@@ -33,8 +33,10 @@ trainingTargets = np.array([[1, 0, 0],
 net = tflearn.input_data(shape=[None, 10])
 net = tflearn.fully_connected(net, 8,  weight_decay = 0.01)
 
+
 net = tflearn.fully_connected(net, 4, activation='softmax',  weight_decay= 0.1)
 net = tflearn.regression(net, optimizer = "adam",  learning_rate = 0.1)
+
 
 # Define model
 model = tflearn.DNN(net)
