@@ -174,7 +174,9 @@ def generateWordData(sourceWord, sLangLayers):
         for child in wordDicts[parent]:
             #skip if the child has no entry
             if child in wordDicts:
-                wordDicts[child][parent] = wordDicts[parent][child]  
+                wordDicts[child][parent] = wordDicts[parent][child] 
+    with open("latticeOutput.json",  "w") as output:
+        json.dump(wordDicts,  output)
     #normalize the dataset
     for eachDict in wordDicts.values():
         for eachWord in eachDict:
